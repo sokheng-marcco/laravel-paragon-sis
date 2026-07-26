@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Student;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
@@ -28,7 +30,7 @@ class StudentController extends Controller
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
-            ->latest('created_at')
+            ->latest('student_id')
             ->get();
 
         return response()->json($students);
@@ -59,9 +61,19 @@ class StudentController extends Controller
     /**
      * Display the specified student. (Display Students by ID)
      */
-    public function show(Student $student): JsonResponse
+    public function show(Request $request, Student $student): JsonResponse
     {
+        $this->authorizeView($request->user(), $student);
+
         return response()->json($student->load('user'));
+    }
+
+    /**
+     * Display the authenticated student's profile.
+     */
+    public function me(Request $request): JsonResponse
+    {
+        return response()->json($this->studentFor($request->user())->load('user'));
     }
 
     /**
@@ -71,19 +83,43 @@ class StudentController extends Controller
     {
         $validated = $request->validate([
             'full_name' => ['sometimes', 'required', 'string', 'max:50'],
+            'email' => [
+                'sometimes',
+                'required',
+                'email',
+                'max:100',
+                Rule::unique('users', 'email')->ignore($student->user_id),
+            ],
             'phone_number' => ['sometimes', 'nullable', 'string', 'max:20'],
             'address' => ['sometimes', 'nullable', 'string'],
             'date_of_birth' => ['sometimes', 'nullable', 'date'],
         ]);
 
-        if (array_key_exists('full_name', $validated)) {
-            $student->user->update(['full_name' => $validated['full_name']]);
-            unset($validated['full_name']);
-        }
+        DB::transaction(function () use ($student, $validated): void {
+            $userAttributes = array_intersect_key(
+                $validated,
+                array_flip(['full_name', 'email']),
+            );
 
-        $student->update($validated);
+            if ($userAttributes !== []) {
+                $student->user->update($userAttributes);
+            }
+
+            $student->update(array_diff_key(
+                $validated,
+                array_flip(['full_name', 'email']),
+            ));
+        });
 
         return response()->json($student->refresh()->load('user'));
+    }
+
+    /**
+     * Update the authenticated student's profile.
+     */
+    public function updateMe(Request $request): JsonResponse
+    {
+        return $this->update($request, $this->studentFor($request->user()));
     }
 
     /**
@@ -93,6 +129,30 @@ class StudentController extends Controller
     {
         $student->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+            'message' => 'Student deleted successfully.',
+        ]);
+    }
+
+    private function authorizeView(User $user, Student $student): void
+    {
+        if ($user->isEmployee()) {
+            return;
+        }
+
+        abort_unless(
+            $user->isStudent() && $student->user_id === $user->id,
+            403,
+            'You are not authorized to view this student.',
+        );
+    }
+
+    private function studentFor(User $user): Student
+    {
+        $student = $user->student;
+
+        abort_unless($student, 422, 'The authenticated user does not have a student profile.');
+
+        return $student;
     }
 }

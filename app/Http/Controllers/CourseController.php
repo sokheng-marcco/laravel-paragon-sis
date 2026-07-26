@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Course;
+use App\Models\Instructor;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,10 +19,24 @@ class CourseController extends Controller
 
         $search = $validated['search'] ?? null;
 
+        $user = $request->user();
         $courses = Course::query()
             ->with('instructor.user:id,full_name')
-            ->when($search, fn ($query, string $search) =>
-                $query->where('course_name', 'like', "%{$search}%"))
+            ->withCount('enrollments')
+            ->when($user->isInstructor(), fn ($query) => $query->where(
+                'instructor_id',
+                $this->instructorFor($user)->instructor_id,
+            ))
+            ->when($search, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->where('course_name', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhereHas(
+                            'instructor.user',
+                            fn ($query) => $query->where('full_name', 'like', "%{$search}%"),
+                        );
+                });
+            })
             ->latest('created_at')
             ->get();
 
@@ -34,7 +50,7 @@ class CourseController extends Controller
             'instructor_id' => ['required', 'integer', 'exists:instructors,instructor_id'],
             'course_name' => ['required', 'string', 'max:150'],
             'description' => ['nullable', 'string'],
-            'duration' => ['nullable', 'integer'],
+            'duration' => ['required', 'integer', 'min:1', 'max:520'],
         ]);
 
         $course = Course::query()->create($validated);
@@ -43,9 +59,13 @@ class CourseController extends Controller
     }
 
     // Display Course by ID
-    public function show(Course $course): JsonResponse
+    public function show(Request $request, Course $course): JsonResponse
     {
-        return response()->json($course->load('instructor.user'));
+        $this->authorizeView($request->user(), $course);
+
+        return response()->json(
+            $course->load('instructor.user')->loadCount('enrollments'),
+        );
     }
 
     // Update Courses
@@ -55,7 +75,7 @@ class CourseController extends Controller
             'instructor_id' => ['sometimes', 'required', 'integer', 'exists:instructors,instructor_id'],
             'course_name' => ['sometimes', 'required', 'string', 'max:150'],
             'description' => ['sometimes', 'nullable', 'string'],
-            'duration' => ['sometimes', 'nullable', 'integer'],
+            'duration' => ['sometimes', 'required', 'integer', 'min:1', 'max:520'],
         ]);
 
         $course->update($validated);
@@ -68,6 +88,30 @@ class CourseController extends Controller
     {
         $course->delete();
 
-        return response()->json(null, 204);
+        return response()->json([
+            'message' => 'Course deleted successfully.',
+        ]);
+    }
+
+    private function authorizeView(User $user, Course $course): void
+    {
+        if (! $user->isInstructor()) {
+            return;
+        }
+
+        abort_unless(
+            $course->instructor_id === $this->instructorFor($user)->instructor_id,
+            403,
+            'Instructors may only view courses assigned to them.',
+        );
+    }
+
+    private function instructorFor(User $user): Instructor
+    {
+        $instructor = $user->instructor;
+
+        abort_unless($instructor, 422, 'The authenticated user does not have an instructor profile.');
+
+        return $instructor;
     }
 }
