@@ -54,7 +54,7 @@ class GradeController extends Controller
                 });
         }
 
-        return response()->json($query->latest('graded_at')->get());
+        return response()->json($query->latest('graded_at')->paginate(10));
     }
 
     public function store(Request $request): JsonResponse

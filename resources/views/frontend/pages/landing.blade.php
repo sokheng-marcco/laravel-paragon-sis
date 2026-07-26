@@ -1,4 +1,4 @@
-<main class="auth-page" data-screen="landing">
+<main class="auth-page">
     <header class="public-header">
         <div class="brand public-brand">
             <span class="brand-icon" aria-hidden="true">
@@ -6,7 +6,7 @@
             </span>
             <strong>EduManage</strong>
         </div>
-        <button class="primary-action" type="button" data-show-screen="signin">Sign In</button>
+        <a class="primary-action" href="{{ route('signin') }}">Sign In</a>
     </header>
 
     <section class="hero">
@@ -14,7 +14,7 @@
             <h1>Modern Student Information System</h1>
             <p>A comprehensive, unified platform for administrators, instructors, and students to manage academic life with ease and clarity.</p>
             <div class="hero-actions">
-                <button class="primary-action hero-action" type="button" data-show-screen="signin">Sign In</button>
+                <a class="primary-action hero-action" href="{{ route('signin') }}">Sign In</a>
             </div>
         </div>
         <div class="hero-panel">
@@ -23,7 +23,7 @@
                 <div class="mini-list">
                     <div class="mini-item"><div><strong>Student records</strong><span>Profiles, contacts, and DOB</span></div><span class="status-pill completed">Live</span></div>
                     <div class="mini-item"><div><strong>Course catalog</strong><span>Instructor and duration tracking</span></div><span class="status-pill completed">Ready</span></div>
-                    <div class="mini-item"><div><strong>Grades</strong><span>Assign, update, and review scores</span></div><span class="status-pill pending">Mock</span></div>
+                    <div class="mini-item"><div><strong>Grades</strong><span>Assign, update, and review scores</span></div><span class="status-pill completed">Live</span></div>
                 </div>
             </section>
         </div>

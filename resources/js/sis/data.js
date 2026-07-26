@@ -1,125 +1,275 @@
 export const state = {
-    screen: 'landing',
     currentRole: 'admin',
-    currentPanel: 'admin-dashboard',
     globalSearch: '',
     tableSearches: {},
     modal: null,
+    authenticatedUser: null,
+    activePaginationKey: null,
 };
 
-export const profiles = {
-    admin: {
-        name: 'System Admin',
-        email: 'admin@edumanage.edu.kh',
-        role: 'admin',
-        phone: '+855 12 443 210',
-        department: 'Academic Administration',
-        address: 'Phnom Penh, Cambodia',
-    },
-    student: {
-        name: 'Student 1',
-        email: 'student1@university.edu',
-        role: 'student',
-        phone: '555-0100',
-        department: 'Bachelor of Information Systems',
-        address: 'Phnom Penh, Cambodia',
-        studentId: 'S1000',
-    },
-    instructor: {
-        name: 'Instructor 1',
-        email: 'instructor1@university.edu',
-        role: 'instructor',
-        phone: '555-0201',
-        department: 'Computer Science',
-        address: 'Phnom Penh, Cambodia',
-        instructorId: 201,
-    },
-};
-
-export const users = [
-    { id: 1, fullName: 'Student 1', email: 'student1@university.edu', role: 'student', createdAt: '2026-01-08' },
-    { id: 2, fullName: 'Student 2', email: 'student2@university.edu', role: 'student', createdAt: '2026-01-10' },
-    { id: 3, fullName: 'Student 3', email: 'student3@university.edu', role: 'student', createdAt: '2026-01-12' },
-    { id: 4, fullName: 'Student 4', email: 'student4@university.edu', role: 'student', createdAt: '2026-01-14' },
-    { id: 5, fullName: 'Student 5', email: 'student5@university.edu', role: 'student', createdAt: '2026-01-16' },
-    { id: 6, fullName: 'Instructor 1', email: 'instructor1@university.edu', role: 'instructor', createdAt: '2025-12-20' },
-    { id: 7, fullName: 'Instructor 2', email: 'instructor2@university.edu', role: 'instructor', createdAt: '2025-12-22' },
-    { id: 8, fullName: 'Registrar Admin', email: 'registrar@university.edu', role: 'admin', createdAt: '2025-12-26' },
-    { id: 9, fullName: 'System Admin', email: 'admin@university.edu', role: 'admin', createdAt: '2025-12-27' },
-];
-
-export const students = [
-    { studentId: 'S1000', userId: 1, phone: '555-0100', address: 'Phnom Penh', dob: '2000-07-15' },
-    { studentId: 'S1001', userId: 2, phone: '555-0101', address: 'Phnom Penh', dob: '2000-05-15' },
-    { studentId: 'S1002', userId: 3, phone: '555-0102', address: 'Phnom Penh', dob: '2003-07-15' },
-    { studentId: 'S1003', userId: 4, phone: '555-0103', address: 'Phnom Penh', dob: '2003-02-15' },
-    { studentId: 'S1004', userId: 5, phone: '555-0104', address: 'Phnom Penh', dob: '2000-02-15' },
-];
-
-export const instructors = [
-    { instructorId: 201, userId: 6, phone: '555-0201', department: 'Computer Science' },
-    { instructorId: 202, userId: 7, phone: '555-0202', department: 'Information Systems' },
-    { instructorId: 203, userId: 6, phone: '555-0203', department: 'Mathematics' },
-    { instructorId: 204, userId: 7, phone: '555-0204', department: 'Business' },
-    { instructorId: 205, userId: 6, phone: '555-0205', department: 'English' },
-    { instructorId: 206, userId: 7, phone: '555-0206', department: 'Design' },
-];
-
-export const courses = [
-    { courseId: 'C2000', instructorId: 201, courseName: 'Database Systems', description: 'Relational data design.', duration: 16 },
-    { courseId: 'C2001', instructorId: 202, courseName: 'Student Information Systems', description: 'Academic records and workflows.', duration: 14 },
-    { courseId: 'C2002', instructorId: 203, courseName: 'Web Application Development', description: 'Frontend and Laravel workflows.', duration: 15 },
-    { courseId: 'C2003', instructorId: 204, courseName: 'Business Analytics', description: 'Dashboards and reporting.', duration: 12 },
-    { courseId: 'C2004', instructorId: 205, courseName: 'Academic Writing', description: 'Research and writing practice.', duration: 10 },
-    { courseId: 'C2005', instructorId: 206, courseName: 'UI Design Fundamentals', description: 'Product interface foundations.', duration: 11 },
-];
-
-export const enrollments = Array.from({ length: 12 }, (_, index) => ({
-    enrollmentId: `E${3000 + index}`,
-    studentId: students[index % students.length].studentId,
-    courseId: courses[index % courses.length].courseId,
-    enrollmentDate: `2026-02-${String((index % 24) + 1).padStart(2, '0')}`,
-    status: index % 5 === 0 ? 'pending' : 'completed',
-}));
-
-export const grades = Array.from({ length: 10 }, (_, index) => {
-    const score = [82, 76, 91, 88, 72, 95, 69, 84, 79, 86][index];
-    return {
-        gradeId: `G${4000 + index}`,
-        studentId: students[index % students.length].studentId,
-        courseId: courses[index % courses.length].courseId,
-        score,
-        grade: scoreToLetter(score),
-        gradedBy: instructors[index % instructors.length].instructorId,
-        gradedAt: `2026-05-${String((index % 24) + 1).padStart(2, '0')}`,
-    };
+const emptyProfile = (role) => ({
+    name: '',
+    email: '',
+    role,
+    phone: '',
+    department: '',
+    address: '',
+    studentId: null,
+    instructorId: null,
+    employeeId: null,
+    dateOfBirth: '',
+    position: '',
 });
 
-export const nextId = (prefix, records, key) => {
-    const max = records.reduce((highest, item) => {
-        const numeric = Number(String(item[key]).replace(/\D/g, ''));
-        return Number.isNaN(numeric) ? highest : Math.max(highest, numeric);
-    }, 0);
-    return `${prefix}${max + 1}`;
+export const profiles = {
+    admin: emptyProfile('employee'),
+    student: emptyProfile('student'),
+    instructor: emptyProfile('instructor'),
 };
 
-export function scoreToLetter(score) {
-    const value = Number(score);
-    if (value >= 90) return 'A';
-    if (value >= 80) return 'B+';
-    if (value >= 70) return 'B';
-    if (value >= 60) return 'C';
-    return 'F';
+// These collections are populated from the API after authentication.
+export const users = [];
+export const students = [];
+export const instructors = [];
+export const courses = [];
+export const enrollments = [];
+export const grades = [];
+export const pagination = {};
+
+const replace = (target, records) => {
+    target.splice(0, target.length, ...records);
+};
+
+const dateOnly = (value) => value ? String(value).slice(0, 10) : '';
+
+export const normalizeUser = (user) => ({
+    id: Number(user.id),
+    fullName: user.full_name,
+    email: user.email,
+    role: user.role,
+    createdAt: dateOnly(user.created_at),
+    student: user.student ?? null,
+    instructor: user.instructor ?? null,
+    employee: user.employee ?? null,
+});
+
+export const normalizeStudent = (student) => ({
+    studentId: Number(student.student_id),
+    userId: Number(student.user_id),
+    phone: student.phone_number ?? '',
+    address: student.address ?? '',
+    dob: dateOnly(student.date_of_birth),
+});
+
+export const normalizeInstructor = (instructor) => ({
+    instructorId: Number(instructor.instructor_id),
+    userId: Number(instructor.user_id),
+    phone: instructor.phone_number ?? '',
+    department: instructor.department ?? '',
+});
+
+export const normalizeCourse = (course) => ({
+    courseId: Number(course.course_id),
+    instructorId: Number(course.instructor_id),
+    courseName: course.course_name,
+    description: course.description ?? '',
+    duration: Number(course.duration),
+    enrollmentsCount: Number(course.enrollments_count ?? 0),
+});
+
+export const normalizeEnrollment = (enrollment) => ({
+    enrollmentId: Number(enrollment.enrollment_id),
+    studentId: Number(enrollment.student_id),
+    courseId: Number(enrollment.course_id),
+    employeeId: enrollment.employee_id ? Number(enrollment.employee_id) : null,
+    enrollmentDate: dateOnly(enrollment.enrollment_date),
+    status: enrollment.status,
+});
+
+export const normalizeGrade = (grade) => ({
+    gradeId: Number(grade.grade_id),
+    studentId: Number(grade.student_id),
+    courseId: Number(grade.course_id),
+    score: Number(grade.score),
+    grade: grade.grade,
+    gradedBy: Number(grade.graded_by),
+    gradedAt: dateOnly(grade.graded_at),
+});
+
+const upsertUser = (user) => {
+    if (!user) return;
+    const normalized = normalizeUser(user);
+    const definedAttributes = Object.fromEntries(
+        Object.entries(normalized).filter(([, value]) => value !== undefined),
+    );
+    const index = users.findIndex((item) => item.id === normalized.id);
+    if (index >= 0) users[index] = { ...users[index], ...definedAttributes };
+    else users.push(definedAttributes);
+};
+
+const upsertStudent = (student) => {
+    if (!student) return;
+    upsertUser(student.user);
+    const normalized = normalizeStudent(student);
+    const index = students.findIndex((item) => item.studentId === normalized.studentId);
+    if (index >= 0) students[index] = normalized;
+    else students.push(normalized);
+};
+
+const upsertInstructor = (instructor) => {
+    if (!instructor) return;
+    upsertUser(instructor.user);
+    const normalized = normalizeInstructor(instructor);
+    const index = instructors.findIndex((item) => item.instructorId === normalized.instructorId);
+    if (index >= 0) instructors[index] = normalized;
+    else instructors.push(normalized);
+};
+
+const upsertCourse = (course) => {
+    if (!course) return;
+    upsertInstructor(course.instructor);
+    const normalized = normalizeCourse(course);
+    const index = courses.findIndex((item) => item.courseId === normalized.courseId);
+    if (index >= 0) courses[index] = normalized;
+    else courses.push(normalized);
+};
+
+export function clearAcademicData() {
+    replace(users, []);
+    replace(students, []);
+    replace(instructors, []);
+    replace(courses, []);
+    replace(enrollments, []);
+    replace(grades, []);
+    Object.keys(pagination).forEach((key) => delete pagination[key]);
+    state.activePaginationKey = null;
 }
 
-export const formatDate = (date) => new Intl.DateTimeFormat('en-CA').format(new Date(date));
+export function setPagination(key, response) {
+    pagination[key] = {
+        currentPage: Number(response.current_page ?? 1),
+        lastPage: Number(response.last_page ?? 1),
+        perPage: Number(response.per_page ?? 10),
+        total: Number(response.total ?? response.data?.length ?? 0),
+        from: response.from,
+        to: response.to,
+    };
+}
+
+export function replacePageRecords(key, records) {
+    if (key === 'users') {
+        replace(users, []);
+        loadUsers(records);
+    }
+
+    if (key === 'students') {
+        replace(students, []);
+        loadStudents(records);
+    }
+
+    if (key === 'courses') {
+        replace(courses, []);
+        loadCourses(records);
+    }
+
+    if (key === 'enrollments') {
+        replace(enrollments, records.map(normalizeEnrollment));
+    }
+
+    if (key === 'grades') {
+        replace(grades, records.map(normalizeGrade));
+    }
+}
+
+export function loadUsers(records) {
+    records.forEach((record) => {
+        upsertUser(record);
+        if (record.student) upsertStudent({ ...record.student, user: record });
+        if (record.instructor) upsertInstructor({ ...record.instructor, user: record });
+    });
+}
+
+export function loadStudents(records) {
+    records.forEach(upsertStudent);
+}
+
+export function loadCourses(records) {
+    records.forEach(upsertCourse);
+}
+
+export function loadEnrollments(records) {
+    records.forEach((record) => {
+        upsertStudent(record.student);
+        upsertCourse(record.course);
+        upsertInstructor(record.course?.instructor);
+    });
+    replace(enrollments, records.map(normalizeEnrollment));
+}
+
+export function loadGrades(records) {
+    records.forEach((record) => {
+        upsertStudent(record.student);
+        upsertInstructor(record.grader);
+    });
+    replace(grades, records.map(normalizeGrade));
+}
+
+export function setCurrentProfile(user, relatedProfile = null) {
+    const uiRole = user.role === 'employee' ? 'admin' : user.role;
+    const profile = profiles[uiRole];
+
+    Object.assign(profile, emptyProfile(user.role), {
+        name: user.full_name,
+        email: user.email,
+        role: user.role,
+    });
+
+    if (uiRole === 'student' && relatedProfile) {
+        Object.assign(profile, {
+            phone: relatedProfile.phone_number ?? '',
+            address: relatedProfile.address ?? '',
+            studentId: Number(relatedProfile.student_id),
+            dateOfBirth: dateOnly(relatedProfile.date_of_birth),
+        });
+    }
+
+    if (uiRole === 'admin' && relatedProfile) {
+        Object.assign(profile, {
+            phone: relatedProfile.phone_number ?? '',
+            department: relatedProfile.position ?? '',
+            position: relatedProfile.position ?? '',
+            employeeId: Number(relatedProfile.employee_id),
+        });
+    }
+
+    if (uiRole === 'instructor' && relatedProfile) {
+        Object.assign(profile, {
+            phone: relatedProfile.phone_number ?? '',
+            department: relatedProfile.department ?? '',
+            instructorId: Number(relatedProfile.instructor_id),
+        });
+    }
+
+    state.authenticatedUser = normalizeUser(user);
+    state.currentRole = uiRole;
+}
+
+export const formatDate = (date) => {
+    if (!date) return '—';
+    const parsed = new Date(`${dateOnly(date)}T00:00:00`);
+    return Number.isNaN(parsed.valueOf()) ? '—' : new Intl.DateTimeFormat('en-CA').format(parsed);
+};
+
 export const userById = (id) => users.find((user) => user.id === Number(id));
-export const studentById = (id) => students.find((student) => student.studentId === id);
-export const courseById = (id) => courses.find((course) => course.courseId === id);
+export const studentById = (id) => students.find((student) => student.studentId === Number(id));
+export const courseById = (id) => courses.find((course) => course.courseId === Number(id));
 export const instructorById = (id) => instructors.find((instructor) => instructor.instructorId === Number(id));
 export const userName = (id) => userById(id)?.fullName ?? 'Unknown';
 export const studentName = (id) => userName(studentById(id)?.userId);
 export const courseName = (id) => courseById(id)?.courseName ?? 'Unknown course';
 export const instructorName = (id) => userName(instructorById(id)?.userId);
-
-export const matchesSearch = (values, search) => values.join(' ').toLowerCase().includes((search ?? '').trim().toLowerCase());
+export const matchesSearch = (values, search) => values
+    .filter((value) => value !== null && value !== undefined)
+    .join(' ')
+    .toLowerCase()
+    .includes((search ?? '').trim().toLowerCase());

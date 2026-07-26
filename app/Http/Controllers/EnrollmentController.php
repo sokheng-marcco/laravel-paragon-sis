@@ -32,6 +32,14 @@ class EnrollmentController extends Controller
 
         if ($user->isStudent()) {
             $query->where('student_id', $this->studentFor($user)->student_id);
+        } elseif ($user->isInstructor()) {
+            $query->whereHas(
+                'course',
+                fn ($query) => $query->where(
+                    'instructor_id',
+                    $user->instructor?->instructor_id,
+                ),
+            );
         }
 
         $query
@@ -39,18 +47,23 @@ class EnrollmentController extends Controller
             ->when($validated['course_id'] ?? null, fn ($query, int $courseId) => $query->where('course_id', $courseId));
 
         if ($user->isEmployee()) {
-            $query
-                ->when($validated['student_id'] ?? null, fn ($query, int $studentId) => $query->where('student_id', $studentId))
-                ->when($validated['search'] ?? null, function ($query, string $search): void {
-                    $query->where(function ($query) use ($search): void {
-                        $query->whereHas('student.user', fn ($query) => $query->where('full_name', 'like', "%{$search}%"))
-                            ->orWhereHas('course', fn ($query) => $query->where('course_name', 'like', "%{$search}%"));
-                    });
+            $query->when(
+                $validated['student_id'] ?? null,
+                fn ($query, int $studentId) => $query->where('student_id', $studentId),
+            );
+        }
+
+        if (! $user->isStudent()) {
+            $query->when($validated['search'] ?? null, function ($query, string $search): void {
+                $query->where(function ($query) use ($search): void {
+                    $query->whereHas('student.user', fn ($query) => $query->where('full_name', 'like', "%{$search}%"))
+                        ->orWhereHas('course', fn ($query) => $query->where('course_name', 'like', "%{$search}%"));
                 });
+            });
         }
 
         return response()->json(
-            $query->latest('enrollment_date')->get(),
+            $query->latest('enrollment_date')->paginate(10),
         );
     }
 
@@ -139,6 +152,16 @@ class EnrollmentController extends Controller
     private function authorizeView(User $user, Enrollment $enrollment): void
     {
         if ($user->isEmployee()) {
+            return;
+        }
+
+        if ($user->isInstructor()) {
+            abort_unless(
+                $enrollment->course->instructor_id === $user->instructor?->instructor_id,
+                403,
+                'You are not authorized to view this enrollment.',
+            );
+
             return;
         }
 

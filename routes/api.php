@@ -4,16 +4,20 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CourseController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\GradeController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('auth/login', [AuthController::class, 'login'])
     ->middleware('throttle:5,1');
+Route::post('auth/change-password', [AuthController::class, 'changePassword'])
+    ->middleware('throttle:5,1');
 
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('auth/me', [AuthController::class, 'me']);
     Route::post('auth/logout', [AuthController::class, 'logout']);
+    Route::patch('profile', [ProfileController::class, 'update']);
 
     Route::apiResource('users', UserController::class)
         ->middleware('role:employee');
@@ -45,11 +49,11 @@ Route::middleware('auth:sanctum')->group(function (): void {
         ->middleware('role:employee');
 
     Route::get('enrollments', [EnrollmentController::class, 'index'])
-        ->middleware('role:employee,student');
+        ->middleware('role:employee,instructor,student');
     Route::post('enrollments', [EnrollmentController::class, 'store'])
         ->middleware('role:employee,student');
     Route::get('enrollments/{enrollment}', [EnrollmentController::class, 'show'])
-        ->middleware('role:employee,student');
+        ->middleware('role:employee,instructor,student');
     Route::match(['put', 'patch'], 'enrollments/{enrollment}', [EnrollmentController::class, 'update'])
         ->middleware('role:employee');
     Route::delete('enrollments/{enrollment}', [EnrollmentController::class, 'destroy'])

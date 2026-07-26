@@ -10,10 +10,24 @@
         @fonts
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body>
-        @include('frontend.pages.landing')
-        @include('frontend.pages.signin')
-        @include('frontend.partials.app-shell')
-        @include('frontend.partials.modals')
+    <body
+        data-page="{{ $page }}"
+        @isset($portalRole) data-portal-role="{{ $portalRole }}" @endisset
+        @isset($modalType) data-modal-type="{{ $modalType }}" @endisset
+        @isset($modalMode) data-modal-mode="{{ $modalMode }}" @endisset
+        @isset($modalIdParameter) data-modal-id="{{ request()->route($modalIdParameter) }}" @endisset
+        @isset($modalCourseParameter) data-modal-course-id="{{ request()->route($modalCourseParameter) }}" @endisset
+        @isset($modalReturnRoute) data-modal-return-url="{{ route($modalReturnRoute, request()->query()) }}" @endisset
+    >
+        @if ($page === 'landing')
+            @include('frontend.pages.landing')
+        @elseif ($page === 'signin')
+            @include('frontend.pages.signin')
+        @elseif ($page === 'change-password')
+            @include('frontend.pages.change-password')
+        @else
+            @include('frontend.partials.app-shell')
+            @include('frontend.partials.modals')
+        @endif
     </body>
 </html>

@@ -49,7 +49,45 @@ class AuthController extends Controller
             'token' => $token->plainTextToken,
             'token_type' => 'Bearer',
             'expires_at' => $expiresAt->toISOString(),
-            'user' => $user,
+            'user' => $user->load(['student', 'instructor', 'employee']),
+        ]);
+    }
+
+    /**
+     * Change a password after verifying the account and current password.
+     *
+     * @throws ValidationException
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:100'],
+            'current_password' => ['required', 'string'],
+            'password' => [
+                'required',
+                'string',
+                'min:8',
+                'max:255',
+                'confirmed',
+                'different:current_password',
+            ],
+        ]);
+
+        $user = User::query()
+            ->where('email', $validated['email'])
+            ->first();
+
+        if (! $user || ! Hash::check($validated['current_password'], $user->password)) {
+            throw ValidationException::withMessages([
+                'current_password' => ['The account or current password is incorrect.'],
+            ]);
+        }
+
+        $user->update(['password' => $validated['password']]);
+        $user->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Password changed successfully. Please sign in with your new password.',
         ]);
     }
 
@@ -58,7 +96,9 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        return response()->json($request->user());
+        return response()->json(
+            $request->user()->load(['student', 'instructor', 'employee']),
+        );
     }
 
     /**

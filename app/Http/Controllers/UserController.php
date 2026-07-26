@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class UserController extends Controller
@@ -24,6 +24,7 @@ class UserController extends Controller
         $role = $validated['role'] ?? null;
 
         $users = User::query()
+            ->with(['student', 'instructor', 'employee'])
             ->when($search, function ($query, string $search): void {
                 $query->where(function ($query) use ($search): void {
                     $query->where('full_name', 'like', "%{$search}%")
@@ -32,7 +33,7 @@ class UserController extends Controller
             })
             ->when($role, fn ($query, string $role) => $query->where('role', $role))
             ->latest('created_at')
-            ->get();
+            ->paginate(10);
 
         return response()->json($users);
     }
@@ -49,13 +50,19 @@ class UserController extends Controller
             'role' => ['required', Rule::in(User::ROLES)],
         ]);
 
-        // The Add User dialog does not request a password. A random password
-        // keeps the account secure until a password setup/reset flow is used.
-        $validated['password'] = $validated['password'] ?? Str::password(32);
+        $validated['password'] = $validated['password'] ?? '11112222';
 
-        $user = User::query()->create($validated);
+        $user = DB::transaction(function () use ($validated): User {
+            $user = User::query()->create($validated);
+            $this->ensureRoleProfile($user);
 
-        return response()->json($user, 201);
+            return $user;
+        });
+
+        return response()->json(
+            $user->load(['student', 'instructor', 'employee']),
+            201,
+        );
     }
 
     /**
@@ -63,7 +70,7 @@ class UserController extends Controller
      */
     public function show(User $user): JsonResponse
     {
-        return response()->json($user);
+        return response()->json($user->load(['student', 'instructor', 'employee']));
     }
 
     /**
@@ -92,9 +99,14 @@ class UserController extends Controller
             unset($validated['password']);
         }
 
-        $user->update($validated);
+        DB::transaction(function () use ($user, $validated): void {
+            $user->update($validated);
+            $this->ensureRoleProfile($user);
+        });
 
-        return response()->json($user->refresh());
+        return response()->json(
+            $user->refresh()->load(['student', 'instructor', 'employee']),
+        );
     }
 
     /**
@@ -105,5 +117,14 @@ class UserController extends Controller
         $user->delete();
 
         return response()->json(null, 204);
+    }
+
+    private function ensureRoleProfile(User $user): void
+    {
+        match ($user->role) {
+            User::ROLE_STUDENT => $user->student()->firstOrCreate(),
+            User::ROLE_INSTRUCTOR => $user->instructor()->firstOrCreate(),
+            User::ROLE_EMPLOYEE => $user->employee()->firstOrCreate(),
+        };
     }
 }

@@ -38,7 +38,7 @@ class CourseController extends Controller
                 });
             })
             ->latest('created_at')
-            ->get();
+            ->paginate(10);
 
         return response()->json($courses);
     }

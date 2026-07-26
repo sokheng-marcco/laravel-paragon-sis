@@ -1,4 +1,4 @@
-<section class="content-view" data-panel="admin-dashboard">
+<section class="content-view {{ $page === 'admin-dashboard' ? 'is-active' : '' }}">
     <div class="page-heading">
         <h1>Admin Dashboard</h1>
         <p>Overview of university operations and performance.</p>
@@ -17,54 +17,57 @@
     </div>
 </section>
 
-<section class="content-view" data-panel="admin-students">
+<section class="content-view {{ $page === 'admin-students' ? 'is-active' : '' }}">
     <div class="page-heading row-heading">
         <div><h1>Students</h1><p>Manage student records and personal information.</p></div>
-        <button class="primary-action" type="button" data-open-modal="student">+ Add Student</button>
+        <a class="primary-action" href="{{ route('admin.students.create', request()->query()) }}">+ Add Student</a>
     </div>
     <section class="panel">
-        <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="students" placeholder="Search by Student ID..."></label>
-        <div class="table-wrap"><table><thead><tr><th>Student ID</th><th>Name</th><th>Email</th><th>Phone</th><th>DOB</th><th>Actions</th></tr></thead><tbody id="student-table"></tbody></table></div>
+        <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="students" placeholder="Search students..."></label>
+        <div class="table-wrap"><table><thead><tr><th>N°</th><th>Name</th><th>Email</th><th>Phone</th><th>DOB</th><th>Actions</th></tr></thead><tbody id="student-table"></tbody></table></div>
     </section>
 </section>
 
-<section class="content-view" data-panel="admin-courses">
+<section class="content-view {{ $page === 'admin-courses' ? 'is-active' : '' }}">
     <div class="page-heading row-heading">
         <div><h1>Courses</h1><p>Manage academic courses and assignments.</p></div>
-        <button class="primary-action" type="button" data-open-modal="course">+ Add Course</button>
+        <a class="primary-action" href="{{ route('admin.courses.create', request()->query()) }}">+ Add Course</a>
     </div>
     <section class="panel">
         <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="courses" placeholder="Search courses..."></label>
-        <div class="table-wrap"><table><thead><tr><th>Course ID</th><th>Course Name</th><th>Description</th><th>Instructor</th><th>Duration</th><th>Actions</th></tr></thead><tbody id="course-table"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>N°</th><th>Course Name</th><th>Description</th><th>Instructor</th><th>Duration</th><th>Actions</th></tr></thead><tbody id="course-table"></tbody></table></div>
     </section>
 </section>
 
-<section class="content-view" data-panel="admin-enrollments">
+<section class="content-view {{ $page === 'admin-enrollments' ? 'is-active' : '' }}">
     <div class="page-heading row-heading">
         <div><h1>Enrollments</h1><p>Manage student course registrations.</p></div>
-        <button class="primary-action" type="button" data-open-modal="enrollment">+ Add Enrollment</button>
+        <a class="primary-action" href="{{ route('admin.enrollments.create', request()->query()) }}">+ Add Enrollment</a>
     </div>
     <section class="panel">
-        <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="enrollments" placeholder="Search by Student ID..."></label>
-        <div class="table-wrap"><table><thead><tr><th>Enrollment ID</th><th>Student</th><th>Course</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="enrollment-table"></tbody></table></div>
+        <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="enrollments" placeholder="Search enrollments..."></label>
+        <div class="table-wrap"><table><thead><tr><th>N°</th><th>Student</th><th>Course</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead><tbody id="enrollment-table"></tbody></table></div>
     </section>
 </section>
 
-<section class="content-view" data-panel="admin-grades">
-    <div class="page-heading"><h1>Grades</h1><p>Manage student grades and academic records.</p></div>
+<section class="content-view {{ $page === 'admin-grades' ? 'is-active' : '' }}">
+    <div class="page-heading row-heading">
+        <div><h1>Grades</h1><p>Manage student grades and academic records.</p></div>
+        <a class="primary-action" href="{{ route('admin.grades.create', request()->query()) }}">+ Add Grade</a>
+    </div>
     <section class="panel">
-        <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="grades" placeholder="Search by Student ID..."></label>
-        <div class="table-wrap"><table><thead><tr><th>Grade ID</th><th>Student</th><th>Course</th><th>Score</th><th>Grade</th><th>Instructor</th></tr></thead><tbody id="grade-table"></tbody></table></div>
+        <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="grades" placeholder="Search grades..."></label>
+        <div class="table-wrap"><table><thead><tr><th>N°</th><th>Student</th><th>Course</th><th>Score</th><th>Grade</th><th>Instructor</th><th>Actions</th></tr></thead><tbody id="grade-table"></tbody></table></div>
     </section>
 </section>
 
-<section class="content-view" data-panel="admin-users">
+<section class="content-view {{ $page === 'admin-users' ? 'is-active' : '' }}">
     <div class="page-heading row-heading">
         <div><h1>User Accounts</h1><p>Manage login accounts by role.</p></div>
-        <button class="primary-action" type="button" data-open-modal="user">+ Add User</button>
+        <a class="primary-action" href="{{ route('admin.users.create', request()->query()) }}">+ Add User</a>
     </div>
     <section class="panel">
         <label class="table-search"><svg viewBox="0 0 24 24"><path d="m21 21-4.3-4.3"></path><circle cx="11" cy="11" r="7"></circle></svg><input type="search" data-table-search="users" placeholder="Search users..."></label>
-        <div class="table-wrap"><table><thead><tr><th>User ID</th><th>Full Name</th><th>Email</th><th>Role</th><th>Created At</th><th>Actions</th></tr></thead><tbody id="user-table"></tbody></table></div>
+        <div class="table-wrap"><table><thead><tr><th>N°</th><th>Full Name</th><th>Email</th><th>Role</th><th>Created At</th><th>Actions</th></tr></thead><tbody id="user-table"></tbody></table></div>
     </section>
 </section>

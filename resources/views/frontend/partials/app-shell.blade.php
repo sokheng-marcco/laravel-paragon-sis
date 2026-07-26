@@ -1,4 +1,4 @@
-<div id="sis-app" class="app-shell is-hidden" data-screen="app">
+<div id="sis-app" class="app-shell">
     <aside class="sidebar" aria-label="Primary navigation">
         <div class="brand">
             <span class="brand-icon" aria-hidden="true">
@@ -32,23 +32,30 @@
                     <button class="account-button" type="button" data-account-toggle>
                         <span class="admin-avatar">S</span>
                         <span>
-                            <strong data-current-name>System Admin</strong>
+                            <strong data-current-name>User</strong>
                             <small data-current-role>admin</small>
                         </span>
                         <svg viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"></path></svg>
                     </button>
                     <div class="account-dropdown">
-                        <button type="button" data-open-profile-editor>Edit Profile</button>
+                        <a href="{{ route($portalRole.'.profile') }}" data-profile-edit>Profile</a>
                         <button type="button" data-sign-out>Sign out</button>
                     </div>
                 </div>
             </div>
         </header>
 
-        @include('frontend.pages.admin')
-        @include('frontend.pages.student')
-        @include('frontend.pages.instructor')
-        @include('frontend.pages.profile')
+        @if ($page === 'profile')
+            @include('frontend.pages.profile')
+        @elseif ($portalRole === 'admin')
+            @include('frontend.pages.admin')
+        @elseif ($portalRole === 'student')
+            @include('frontend.pages.student')
+        @elseif ($portalRole === 'instructor')
+            @include('frontend.pages.instructor')
+        @endif
+
+        <nav class="pagination-bar is-hidden" data-pagination aria-label="Pagination"></nav>
 
         <footer class="footer">© 2026 EduManage SIS. All rights reserved.</footer>
     </main>

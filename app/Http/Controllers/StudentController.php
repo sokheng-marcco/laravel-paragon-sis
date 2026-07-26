@@ -31,7 +31,7 @@ class StudentController extends Controller
                 });
             })
             ->latest('student_id')
-            ->get();
+            ->paginate(10);
 
         return response()->json($students);
     }
